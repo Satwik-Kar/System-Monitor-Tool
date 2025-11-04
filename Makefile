@@ -17,6 +17,7 @@ TARGET = sysmon
 
 all:
 	$(CXX) $(CXXFLAGS) $(SRC) $(IMGUI_SRC) $(IMGUI_SFML_SRC) -o $(TARGET) $(LIBS)
+	./sysmon
 
 clean:
 	rm -f $(TARGET)
