@@ -29,8 +29,8 @@ int main() {
         !freeIcon.loadFromFile("assets/icons/usedIcon.png"
     )) return -1;
 
-    sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "System Monitor Tool",
-        sf::Style::Titlebar | sf::Style::Resize | sf::Style::Close);
+    sf::VideoMode vm = sf::VideoMode::getDesktopMode();
+    sf::RenderWindow window(vm, "System Monitor Tool", sf::Style::Titlebar | sf::Style::Resize | sf::Style::Close);
     window.setFramerateLimit(60);
 
     if (!ImGui::SFML::Init(window)) return -1;
@@ -46,6 +46,12 @@ int main() {
         while (window.pollEvent(event)) {
             ImGui::SFML::ProcessEvent(event);
             if (event.type == sf::Event::Closed) window.close();
+            if (event.type == sf::Event::Resized) {
+                sf::View v = window.getView();
+                v.setSize((float)event.size.width, (float)event.size.height);
+                v.setCenter((float)event.size.width/2.f, (float)event.size.height/2.f);
+                window.setView(v);
+            }
         }
 
         ImGui::SFML::Update(window, deltaClock.restart());
