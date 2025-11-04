@@ -3,25 +3,45 @@
 #include <imgui-SFML.h>
 #include <iostream>
 
+void DrawChip(ImDrawList* drawList, const ImVec2& basePos, float offsetX, float offsetY,
+              float width, float height, ImU32 color, sf::Texture& icon,
+              const char* label, ImVec4 textColor) {
+    float radius = height / 2.0f;
+    ImVec2 chipMin(basePos.x + offsetX, basePos.y + offsetY);
+    ImVec2 chipMax(basePos.x + offsetX + width, basePos.y + offsetY + height);
+    drawList->AddRectFilled(chipMin, chipMax, color, radius);
+
+    float iconSize = 20.0f;
+    float iconY = offsetY + (height - iconSize) * 0.5f;
+    float textY = offsetY + (height - ImGui::GetTextLineHeight()) * 0.5f - 1.0f;
+
+    ImGui::SetCursorScreenPos(ImVec2(chipMin.x + 10, basePos.y + iconY));
+    ImGui::Image((void*)icon.getNativeHandle(), ImVec2(iconSize, iconSize));
+    ImGui::SameLine();
+    ImGui::SetCursorScreenPos(ImVec2(chipMin.x + 10 + iconSize + 10, basePos.y + textY));
+    ImGui::TextColored(textColor, label);
+}
+
 int main() {
     sf::Texture logoTexture;
     if (!logoTexture.loadFromFile("assets/icons/processor.png")) return -1;
-
     sf::Texture chipIcon1;
     if (!chipIcon1.loadFromFile("assets/icons/health.png")) return -1;
-
     sf::Texture chipIcon2;
     if (!chipIcon2.loadFromFile("assets/icons/pulse.png")) return -1;
-
     sf::Texture refreshIcon;
     if (!refreshIcon.loadFromFile("assets/icons/refresh.png")) return -1;
+    sf::Texture cpuTexture;
+    if (!cpuTexture.loadFromFile("assets/icons/cpu.png")) return -1;
+    sf::Texture speedIcon;
+    if (!speedIcon.loadFromFile("assets/icons/speed.png")) return -1;
+    sf::Texture clockIcon;
+    if (!clockIcon.loadFromFile("assets/icons/clockspeed.png")) return -1;
 
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-    sf::RenderWindow window(desktop, "System Monitor Tool",
-        sf::Style::Titlebar | sf::Style::Resize | sf::Style::Close);
+    sf::RenderWindow window(desktop, "System Monitor Tool", sf::Style::Titlebar | sf::Style::Resize | sf::Style::Close);
     window.setPosition(sf::Vector2i(0, 0));
     window.setFramerateLimit(60);
-
     if (!ImGui::SFML::Init(window)) return -1;
 
     ImGuiIO& io = ImGui::GetIO();
@@ -41,19 +61,18 @@ int main() {
 
         ImGui::SFML::Update(window, deltaClock.restart());
         window.clear(sf::Color(11, 15, 20));
-
         sf::RectangleShape header(sf::Vector2f(window.getSize().x, 50));
         header.setFillColor(sf::Color(14, 20, 24));
         window.draw(header);
 
+        ImGui::GetStyle().WindowRounding = 15.0f;
         ImGui::PushFont(momoFont);
+
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 50));
         ImGui::Begin("Header", nullptr,
-            ImGuiWindowFlags_NoDecoration |
-            ImGuiWindowFlags_NoMove |
-            ImGuiWindowFlags_NoResize |
-            ImGuiWindowFlags_NoBackground |
+            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground |
             ImGuiWindowFlags_NoSavedSettings);
 
         ImGui::SetCursorPos(ImVec2(10, 9));
@@ -67,78 +86,55 @@ int main() {
         float chipWidth = 120.0f, chipHeight = 32.0f, chipY = 9;
         float chipX1 = 47 + textSize.x + 20;
         float chipX2 = chipX1 + chipWidth + 15;
-
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-        draw_list->AddRectFilled(
-            ImVec2(ImGui::GetWindowPos().x + chipX1, ImGui::GetWindowPos().y + chipY),
+        draw_list->AddRectFilled(ImVec2(ImGui::GetWindowPos().x + chipX1, ImGui::GetWindowPos().y + chipY),
             ImVec2(ImGui::GetWindowPos().x + chipX1 + chipWidth, ImGui::GetWindowPos().y + chipY + chipHeight),
-            IM_COL32(0, 180, 0, 255),
-            chipHeight / 2.0f
-        );
-
-        float iconSize = 25.0f;
+            IM_COL32(31, 185, 122, 255), chipHeight / 2.0f);
+        float iconSize = 20.0f;
         float iconY = chipY + (chipHeight - iconSize) / 2.0f;
         float textY = chipY + (chipHeight - ImGui::GetTextLineHeight()) / 2.0f;
-
         ImGui::SetCursorPos(ImVec2(chipX1 + 8, iconY));
         ImGui::Image((void*)chipIcon1.getNativeHandle(), ImVec2(iconSize, iconSize));
         ImGui::SameLine();
         ImGui::SetCursorPos(ImVec2(chipX1 + 36, textY));
         ImGui::TextColored(ImVec4(1, 1, 1, 1), "Healthy");
 
-        draw_list->AddRectFilled(
-            ImVec2(ImGui::GetWindowPos().x + chipX2, ImGui::GetWindowPos().y + chipY),
+        draw_list->AddRectFilled(ImVec2(ImGui::GetWindowPos().x + chipX2, ImGui::GetWindowPos().y + chipY),
             ImVec2(ImGui::GetWindowPos().x + chipX2 + chipWidth, ImGui::GetWindowPos().y + chipY + chipHeight),
-            IM_COL32(255, 165, 0, 220),
-            chipHeight / 2.0f
-        );
-
+            IM_COL32(255, 165, 0, 220), chipHeight / 2.0f);
         ImGui::SetCursorPos(ImVec2(chipX2 + 8, iconY));
         ImGui::Image((void*)chipIcon2.getNativeHandle(), ImVec2(iconSize, iconSize));
         ImGui::SameLine();
         ImGui::SetCursorPos(ImVec2(chipX2 + 36, textY));
         ImGui::TextColored(ImVec4(1, 1, 1, 1), "Load 62%%");
 
+        float chipX3 = chipX2 + chipWidth + 15;
+        draw_list->AddRectFilled(ImVec2(ImGui::GetWindowPos().x + chipX3, ImGui::GetWindowPos().y + chipY),
+            ImVec2(ImGui::GetWindowPos().x + chipX3 + chipWidth, ImGui::GetWindowPos().y + chipY + chipHeight),
+            IM_COL32(70, 130, 180, 255), chipHeight / 2.0f);
+        ImGui::SetCursorPos(ImVec2(chipX3 + 8, iconY));
+        ImGui::Image((void*)clockIcon.getNativeHandle(), ImVec2(iconSize, iconSize));
+        ImGui::SameLine();
+        ImGui::SetCursorPos(ImVec2(chipX3 + 36, textY));
+        ImGui::TextColored(ImVec4(1, 1, 1, 1), "3.6 GHz");
+
         float refreshWidth = 140.0f;
         float refreshX = ImGui::GetIO().DisplaySize.x - refreshWidth - 20;
         float refreshY = 9.0f;
-        ImU32 chipColor = IM_COL32(23, 43, 58, 255);
-        ImU32 hoverColor = IM_COL32(33, 63, 78, 255);
-        float cornerRadius = 10.0f;  
+        ImU32 chipColor = IM_COL32(38, 166, 154, 255);
+        float cornerRadius = 10.0f;
 
-        draw_list->AddRectFilled(
-            ImVec2(ImGui::GetWindowPos().x + refreshX, ImGui::GetWindowPos().y + refreshY),
+        draw_list->AddRectFilled(ImVec2(ImGui::GetWindowPos().x + refreshX, ImGui::GetWindowPos().y + refreshY),
             ImVec2(ImGui::GetWindowPos().x + refreshX + refreshWidth, ImGui::GetWindowPos().y + refreshY + chipHeight),
-            chipColor,
-            cornerRadius
-        );
-
+            chipColor, cornerRadius);
         ImGui::SetCursorPos(ImVec2(refreshX + 8, iconY));
         ImGui::Image((void*)refreshIcon.getNativeHandle(), ImVec2(iconSize, iconSize));
         ImGui::SameLine();
         ImGui::SetCursorPos(ImVec2(refreshX + 42, textY));
         ImGui::InvisibleButton("refresh_chip", ImVec2(refreshWidth, chipHeight));
-
-        draw_list->AddText(
-            ImVec2(ImGui::GetWindowPos().x + refreshX + 42, ImGui::GetWindowPos().y + chipY + 7),
-            IM_COL32(255, 255, 255, 255),
-            "Refresh"
-        );
-
-        if (ImGui::IsItemHovered()) {
-            draw_list->AddRectFilled(
-                ImVec2(ImGui::GetWindowPos().x + refreshX, ImGui::GetWindowPos().y + refreshY),
-                ImVec2(ImGui::GetWindowPos().x + refreshX + refreshWidth, ImGui::GetWindowPos().y + refreshY + chipHeight),
-                hoverColor,
-                cornerRadius
-            );
-            draw_list->AddText(
-                ImVec2(ImGui::GetWindowPos().x + refreshX + 42, ImGui::GetWindowPos().y + chipY + 7),
-                IM_COL32(255, 255, 255, 255),
-                "Refresh"
-            );
-        }
+        draw_list->AddText(ImVec2(ImGui::GetWindowPos().x + refreshX + 42, ImGui::GetWindowPos().y + chipY + 7),
+            IM_COL32(255, 255, 255, 255), "Refresh");
 
         if (ImGui::IsItemClicked()) {
             refreshed = true;
@@ -149,9 +145,40 @@ int main() {
         ImGui::End();
 
         ImGui::PushFont(momoFont);
-        ImGui::Begin("Main Panel");
-        if (refreshed) ImGui::Text("Refreshed successfully!");
-        else ImGui::Text("ImGui + SFML window is working!");
+        ImGui::SetNextWindowPos(ImVec2(20, 60), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x / 2, 300));
+        ImGui::Begin("CPU Usage", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar);
+
+        ImGui::SetCursorPos(ImVec2(10, 10));
+        ImGui::Image((void*)cpuTexture.getNativeHandle(), ImVec2(28, 28));
+        ImGui::SameLine();
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 6);
+        ImGui::TextColored(ImVec4(255, 255, 255, 255), "CPU Usage");
+
+        float rightPadding = 25.0f;
+        float dotSize = 9.0f;
+        float spacing = 60.0f;
+        ImVec2 winPos = ImGui::GetWindowPos();
+        float startX = ImGui::GetWindowContentRegionMax().x - rightPadding - 150;
+        float baseY = winPos.y + 18.0f;
+
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        drawList->AddCircleFilled(ImVec2(winPos.x + startX, baseY), dotSize / 2, IM_COL32(0, 200, 200, 255));
+        ImGui::SetCursorScreenPos(ImVec2(winPos.x + startX + 12, baseY - 8));
+        ImGui::TextColored(ImVec4(0, 1, 1, 1), "User");
+
+        drawList->AddCircleFilled(ImVec2(winPos.x + startX + spacing, baseY), dotSize / 2, IM_COL32(120, 180, 255, 255));
+        ImGui::SetCursorScreenPos(ImVec2(winPos.x + startX + spacing + 12, baseY - 8));
+        ImGui::TextColored(ImVec4(0.7, 0.9, 1, 1), "System");
+        ImGui::Dummy(ImVec2(0.0f, 8.0f));
+        ImGui::Separator();
+        ImGui::Dummy(ImVec2(0.0f, 8.0f));
+        ImDrawList* chipDrawList = ImGui::GetWindowDrawList();
+        ImVec2 chipPos = ImGui::GetCursorScreenPos();
+        DrawChip(chipDrawList, chipPos, 10, 10, 150, 36, IM_COL32(23, 43, 58, 255), speedIcon, "Avg 58%%", ImVec4(0.3, 0.6, 0.8, 1));
+        DrawChip(chipDrawList, chipPos, 180, 10, 150, 36, IM_COL32(28, 55, 70, 255), clockIcon, "3.6 GHz", ImVec4(0.4, 0.8, 1, 1));
+        ImGui::Dummy(ImVec2(0, 56));
         ImGui::End();
         ImGui::PopFont();
 
