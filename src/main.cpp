@@ -3,10 +3,12 @@
 #include <imgui-SFML.h>
 #include "ui_header.hpp"
 #include "ui_cpu_window.hpp"
+#include "ui_memory_window.hpp"
 
 int main() {
     sf::Texture logoTexture, chipIcon1, chipIcon2, refreshIcon, cpuTexture,
-                speedIcon, clockIcon, userIcon, systemIcon, idleIcon;
+                speedIcon, clockIcon, userIcon, systemIcon, idleIcon,
+                memoryTexture, diskIcon,swapIcon,usedIcon,cachedIcon,freeIcon;
 
     if (!logoTexture.loadFromFile("assets/icons/processor.png") ||
         !chipIcon1.loadFromFile("assets/icons/health.png") ||
@@ -17,7 +19,15 @@ int main() {
         !clockIcon.loadFromFile("assets/icons/clockspeed.png") ||
         !userIcon.loadFromFile("assets/icons/user.png") ||
         !systemIcon.loadFromFile("assets/icons/system.png") ||
-        !idleIcon.loadFromFile("assets/icons/idle.png")) return -1;
+        !idleIcon.loadFromFile("assets/icons/idle.png")||
+
+        !memoryTexture.loadFromFile("assets/icons/memoryTexture.png")||
+        !diskIcon.loadFromFile("assets/icons/diskIcon.png")||
+        !usedIcon.loadFromFile("assets/icons/usedIcon.png")||
+        !swapIcon.loadFromFile("assets/icons/swapIcon.png")||
+        !cachedIcon.loadFromFile("assets/icons/usedIcon.png")||
+        !freeIcon.loadFromFile("assets/icons/usedIcon.png"
+    )) return -1;
 
     sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "System Monitor Tool",
         sf::Style::Titlebar | sf::Style::Resize | sf::Style::Close);
@@ -43,7 +53,7 @@ int main() {
 
         bool refreshed = RenderHeaderBar(logoTexture, chipIcon1, chipIcon2, clockIcon, refreshIcon, momoFont);
         RenderCPUWindow(cpuTexture, speedIcon, clockIcon, userIcon, systemIcon, idleIcon, momoFont);
-
+        RenderMemoryWindow(memoryTexture, diskIcon, swapIcon, usedIcon, cachedIcon, freeIcon, momoFont);
         ImGui::SFML::Render(window);
         window.display();
     }

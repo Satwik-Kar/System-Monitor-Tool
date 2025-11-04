@@ -1,28 +1,27 @@
-#include "ui_cpu_window.hpp"
+#include "ui_memory_window.hpp"
 #include <vector>
 #include <cstdlib>
-int paddingCpu  = 20.0f;
-
-void RenderCPUWindow(sf::Texture& cpuTexture,
-                     sf::Texture& speedIcon,
-                     sf::Texture& clockIcon,
-                     sf::Texture& userIcon,
-                     sf::Texture& systemIcon,
-                     sf::Texture& idleIcon,
+int padding  = 20.0f;
+void RenderMemoryWindow(sf::Texture& memoryTexture,
+                     sf::Texture& diskIcon,
+                     sf::Texture& swapIcon,
+                     sf::Texture& usedIcon,
+                     sf::Texture& cachedIcon,
+                     sf::Texture& freeIcon,
                      ImFont* font) {
     ImGui::PushFont(font);
-    ImGui::SetNextWindowPos(ImVec2(20, 60), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x / 2 - paddingCpu, 350));
-    ImGui::Begin("CPU Usage", nullptr,
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x/2 + padding, 60), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x / 2 - padding, 350));
+    ImGui::Begin("Memory Usage", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize |
         ImGuiWindowFlags_NoTitleBar);
 
     ImGui::SetCursorPos(ImVec2(10, 10));
-    ImGui::Image((void*)(intptr_t)cpuTexture.getNativeHandle(), ImVec2(28, 28));
+    ImGui::Image((void*)(intptr_t)memoryTexture.getNativeHandle(), ImVec2(28, 28));
     ImGui::SameLine();
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 6);
-    ImGui::TextColored(ImVec4(255, 255, 255, 255), "CPU Usage");
+    ImGui::TextColored(ImVec4(255, 255, 255, 255), "Memory Usage");
 
     float dotSize = 9.0f;
     float spacing = 80.0f;
@@ -33,11 +32,12 @@ void RenderCPUWindow(sf::Texture& cpuTexture,
     ImDrawList* drawListDots = ImGui::GetWindowDrawList();
     drawListDots->AddCircleFilled(ImVec2(winPos.x + startX, baseY), dotSize / 2, IM_COL32(0, 200, 200, 255));
     ImGui::SetCursorScreenPos(ImVec2(winPos.x + startX + 12, baseY - 8));
-    ImGui::TextColored(ImVec4(0, 1, 1, 1), "User");
+    ImGui::TextColored(ImVec4(0, 1, 1, 1), "Used");
+    
 
     drawListDots->AddCircleFilled(ImVec2(winPos.x + startX + spacing, baseY), dotSize / 2, IM_COL32(120, 180, 255, 255));
     ImGui::SetCursorScreenPos(ImVec2(winPos.x + startX + spacing + 12, baseY - 8));
-    ImGui::TextColored(ImVec4(0.7, 0.9, 1, 1), "System");
+    ImGui::TextColored(ImVec4(0.7, 0.9, 1, 1), "Cached");
 
     ImGui::Dummy(ImVec2(0, 8));
     ImGui::Separator();
@@ -45,8 +45,8 @@ void RenderCPUWindow(sf::Texture& cpuTexture,
 
     ImDrawList* chipDrawList = ImGui::GetWindowDrawList();
     ImVec2 chipPos = ImGui::GetCursorScreenPos();
-    DrawChip(chipDrawList, chipPos, 10, 10, 150, 36, IM_COL32(23, 43, 58, 255), speedIcon, "Avg 58%%", ImVec4(0.3, 0.6, 0.8, 1));
-    DrawChip(chipDrawList, chipPos, 174, 10, 150, 36, IM_COL32(28, 55, 70, 255), clockIcon, "3.6 GHz", ImVec4(0.4, 0.8, 1, 1));
+    DrawChip(chipDrawList, chipPos, 10, 10, 166, 36, IM_COL32(23, 43, 58, 255), diskIcon, "24.6 GB / 32 GB", ImVec4(0.3, 0.6, 0.8, 1));
+    DrawChip(chipDrawList, chipPos, 190, 10, 150, 36, IM_COL32(28, 55, 70, 255), swapIcon, "Swap: 1.2 GB", ImVec4(0.4, 0.8, 1, 1));
 
     ImGui::Dummy(ImVec2(0, 16));
 
@@ -98,10 +98,10 @@ void RenderCPUWindow(sf::Texture& cpuTexture,
         ImVec4 textColor;
     };
     std::vector<ChipInfo> list = {
-        { &userIcon, "User: 12%%", IM_COL32(23,43,58,255), ImVec4(0.6,0.9,1,1) },
-        { &systemIcon, "System: 30%%", IM_COL32(28,55,70,255), ImVec4(0.4,0.8,1,1) },
-        { &idleIcon, "Idle: 48%%", IM_COL32(40,70,90,255), ImVec4(0.5,0.8,1,1) },
-        { &cpuTexture, "Available Cores: 16", IM_COL32(50,90,110,255), ImVec4(0.7,1,0.9,1) }
+        { &usedIcon, "Used: 12%%", IM_COL32(23,43,58,255), ImVec4(0.6,0.9,1,1) },
+        { &cachedIcon, "Cached: 30%%", IM_COL32(28,55,70,255), ImVec4(0.4,0.8,1,1) },
+        { &freeIcon, "Free: 48%%", IM_COL32(40,70,90,255), ImVec4(0.5,0.8,1,1) },
+        { &freeIcon, "Swapped: 38%%", IM_COL32(50,90,110,255), ImVec4(0.7,1,0.9,1) }
     };
 
     float xOffset = 10, chipSpacing = 20, paddingX = 40, height = 56;
