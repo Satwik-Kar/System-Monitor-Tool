@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Iexternal/imgui -Iexternal/imgui-sfml -Isrc -std=c++17 -Wall
+CXXFLAGS = -Iexternal/imgui -Iexternal/imgui-sfml -Iinclude -std=c++17 -Wall
 
 IMGUI_SRC = external/imgui/imgui.cpp \
             external/imgui/imgui_draw.cpp \
@@ -9,7 +9,10 @@ IMGUI_SRC = external/imgui/imgui.cpp \
 
 IMGUI_SFML_SRC = external/imgui-sfml/imgui-SFML.cpp
 
-SRC = src/main.cpp
+SRC = src/main.cpp \
+      src/chip_renderer.cpp \
+      src/ui_header.cpp \
+      src/ui_cpu_window.cpp
 
 LIBS = -lsfml-graphics -lsfml-window -lsfml-system -lGL
 
