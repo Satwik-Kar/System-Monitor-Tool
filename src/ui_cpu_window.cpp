@@ -33,7 +33,7 @@ void RenderCPUWindow(sf::Texture& cpuTexture,
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 6);
     ImGui::TextColored(ImVec4(1,1,1,1), "CPU Usage");
 
-    float dotSize = std::max(6.0f, winH * 0.02f);
+    float dotSize = std::max(6.0f, winH * 0.05f);
     float spacing = std::clamp(winW * 0.12f, 40.0f, 120.0f);
     ImVec2 winPos = ImGui::GetWindowPos();
     float baseY = winPos.y + 18.0f;
@@ -113,9 +113,9 @@ void RenderCPUWindow(sf::Texture& cpuTexture,
         ImVec4 textColor;
     };
     std::vector<ChipInfo> list = {
-        { &userIcon, "User: 12%%", IM_COL32(23,43,58,255), ImVec4(0.6,0.9,1,1) },
-        { &systemIcon, "System: 30%%", IM_COL32(28,55,70,255), ImVec4(0.4,0.8,1,1) },
-        { &idleIcon, "Idle: 48%%", IM_COL32(40,70,90,255), ImVec4(0.5,0.8,1,1) },
+        { &userIcon, "User: 12%", IM_COL32(23,43,58,255), ImVec4(0.6,0.9,1,1) },
+        { &systemIcon, "System: 30%", IM_COL32(28,55,70,255), ImVec4(0.4,0.8,1,1) },
+        { &idleIcon, "Idle: 48%", IM_COL32(40,70,90,255), ImVec4(0.5,0.8,1,1) },
         { &cpuTexture, "Available Cores: 16", IM_COL32(50,90,110,255), ImVec4(0.7,1,0.9,1) }
     };
 
