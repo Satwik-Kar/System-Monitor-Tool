@@ -4,11 +4,12 @@
 #include "ui_header.hpp"
 #include "ui_cpu_window.hpp"
 #include "ui_memory_window.hpp"
+#include "ui_header_processes.hpp"
 
 int main() {
     sf::Texture logoTexture, chipIcon1, chipIcon2, refreshIcon, cpuTexture,
                 speedIcon, clockIcon, userIcon, systemIcon, idleIcon,
-                memoryTexture, diskIcon,swapIcon,usedIcon,cachedIcon,freeIcon;
+                memoryTexture,searchTexture,sortIcon, filterIcon,menuTexture, diskIcon,swapIcon,usedIcon,cachedIcon,freeIcon;
 
     if (!logoTexture.loadFromFile("assets/icons/processor.png") ||
         !chipIcon1.loadFromFile("assets/icons/health.png") ||
@@ -25,7 +26,11 @@ int main() {
         !diskIcon.loadFromFile("assets/icons/diskIcon.png")||
         !usedIcon.loadFromFile("assets/icons/usedIcon.png")||
         !swapIcon.loadFromFile("assets/icons/swapIcon.png")||
+        !searchTexture.loadFromFile("assets/icons/search.png")||
+        !sortIcon.loadFromFile("assets/icons/sort.png")||
+        !filterIcon.loadFromFile("assets/icons/filter.png")||
         !cachedIcon.loadFromFile("assets/icons/usedIcon.png")||
+        !menuTexture.loadFromFile("assets/icons/menu.png")||
         !freeIcon.loadFromFile("assets/icons/usedIcon.png"
     )) return -1;
 
@@ -60,6 +65,7 @@ int main() {
         bool refreshed = RenderHeaderBar(logoTexture, chipIcon1, chipIcon2, clockIcon, refreshIcon, momoFont);
         RenderCPUWindow(cpuTexture, speedIcon, clockIcon, userIcon, systemIcon, idleIcon, momoFont);
         RenderMemoryWindow(memoryTexture, diskIcon, swapIcon, usedIcon, cachedIcon, freeIcon, momoFont);
+        RenderProcessHeaderBar(menuTexture,searchTexture, sortIcon, filterIcon, momoFont);
         ImGui::SFML::Render(window);
         window.display();
     }

@@ -58,7 +58,7 @@ void RenderCPUWindow(sf::Texture& cpuTexture,
     float chipPaddingX = std::clamp(winW * 0.05f, 24.0f, 60.0f);
     float chip1Width = std::clamp(winW * 0.32f, 120.0f, 260.0f);
     float chip2Width = std::clamp(winW * 0.28f, 100.0f, 220.0f);
-    DrawChip(chipDrawList, chipPos, 10, 10, chip1Width, chipHeight, IM_COL32(23, 43, 58, 255), speedIcon, "Avg 58%%", ImVec4(0.3, 0.6, 0.8, 1));
+    DrawChip(chipDrawList, chipPos, 10, 10, chip1Width, chipHeight, IM_COL32(23, 43, 58, 255), speedIcon, "Avg 58%", ImVec4(0.3, 0.6, 0.8, 1));
     DrawChip(chipDrawList, chipPos, 20 + chip1Width, 10, chip2Width, chipHeight, IM_COL32(28, 55, 70, 255), clockIcon, "3.6 GHz", ImVec4(0.4, 0.8, 1, 1));
 
     ImGui::Dummy(ImVec2(0, std::clamp(winH * 0.02f, 8.0f, 24.0f)));
