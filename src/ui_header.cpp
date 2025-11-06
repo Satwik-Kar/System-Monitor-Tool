@@ -16,6 +16,12 @@ bool RenderHeaderBar(sf::Texture& logoTexture,
         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground |
         ImGuiWindowFlags_NoSavedSettings);
 
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    
+    ImVec2 p_min = ImGui::GetWindowPos();
+    ImVec2 p_max = ImVec2(p_min.x + ImGui::GetWindowSize().x, p_min.y + ImGui::GetWindowSize().y);
+    draw_list->AddRectFilled(p_min, p_max, IM_COL32(14, 20, 24, 255));
+
     ImGui::SetCursorPos(ImVec2(10, 9));
     float logoSize = std::clamp(display.y * 0.035f, 20.0f, 36.0f);
     ImGui::Image((void*)(intptr_t)logoTexture.getNativeHandle(), ImVec2(logoSize, logoSize));
@@ -30,7 +36,6 @@ bool RenderHeaderBar(sf::Texture& logoTexture,
     float chipY = 9.0f;
     float chipX1 = 10 + logoSize + 6 + textSize.x + 12.0f;
     float chipGap = std::clamp(display.x * 0.01f, 8.0f, 20.0f);
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     draw_list->AddRectFilled(ImVec2(ImGui::GetWindowPos().x + chipX1, ImGui::GetWindowPos().y + chipY),
         ImVec2(ImGui::GetWindowPos().x + chipX1 + chipWidth, ImGui::GetWindowPos().y + chipY + chipHeight),
@@ -82,6 +87,12 @@ bool RenderHeaderBar(sf::Texture& logoTexture,
         refreshed = true;
         std::cout << "Refreshed!\n";
     }
+
+    float windowHeight = ImGui::GetWindowSize().y;
+    ImVec2 p1 = ImVec2(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y + windowHeight - 1.0f);
+    ImVec2 p2 = ImVec2(ImGui::GetWindowPos().x + display.x, ImGui::GetWindowPos().y + windowHeight - 1.0f);
+    draw_list->AddLine(p1, p2, IM_COL32(23, 43, 58, 255), 4.0f);
+    
 
     ImGui::PopFont();
     ImGui::End();
