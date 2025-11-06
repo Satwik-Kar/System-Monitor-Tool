@@ -20,7 +20,7 @@ void RenderMemoryWindow(sf::Texture& memoryTexture,
     float padding = std::clamp(display.x * 0.02f, 10.0f, 40.0f);
     float winW = std::max(220.0f, display.x * 0.48f - padding);
     float winH = std::max(250.0f, display.y * 0.35f);
-    ImGui::SetNextWindowPos(ImVec2(display.x * 0.5f + padding * 0.5f, 60), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(display.x * 0.5f + padding * 0.5f, 80), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(winW, winH));
     ImGui::Begin("Memory Usage", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
