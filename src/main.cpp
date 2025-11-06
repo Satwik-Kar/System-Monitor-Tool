@@ -5,7 +5,7 @@
 #include "ui_cpu_window.hpp"
 #include "ui_memory_window.hpp"
 #include "ui_header_processes.hpp"
-
+#include "ui_process_list.hpp"
 int main() {
     sf::Texture logoTexture, chipIcon1, chipIcon2, refreshIcon, cpuTexture,
                 speedIcon, clockIcon, userIcon, systemIcon, idleIcon,
@@ -60,12 +60,14 @@ int main() {
         }
 
         ImGui::SFML::Update(window, deltaClock.restart());
-        window.clear(sf::Color(11, 15, 20));
+        window.clear(sf::Color(11, 15, 20)); 
 
         bool refreshed = RenderHeaderBar(logoTexture, chipIcon1, chipIcon2, clockIcon, refreshIcon, momoFont);
+        
         RenderCPUWindow(cpuTexture, speedIcon, clockIcon, userIcon, systemIcon, idleIcon, momoFont);
         RenderMemoryWindow(memoryTexture, diskIcon, swapIcon, usedIcon, cachedIcon, freeIcon, momoFont);
         RenderProcessHeaderBar(menuTexture,searchTexture, sortIcon, filterIcon, momoFont);
+        RenderProcessList(momoFont);
         ImGui::SFML::Render(window);
         window.display();
     }
