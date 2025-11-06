@@ -1,28 +1,19 @@
 #include "ui_process_list.hpp"
+#include "process_info.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
 
-struct ProcessInfo {
-    int pid;
-    std::string name;
-    float cpu;
-    float memory;
-    std::string status;
-};
-
-std::vector<ProcessInfo> processes = {
-    {101, "chrome.exe", 12.5f, 250.8f, "Running"},
-    {205, "code.exe", 5.2f, 180.2f, "Running"},
-    {300, "your_app.exe", 45.1f, 800.0f, "Running"},
-    {404, "svchost.exe", 0.1f, 15.5f, "Suspended"},
-    {500, "explorer.exe", 1.8f, 95.1f, "Running"},
-    {501, "taskmgr.exe", 2.3f, 45.6f, "Running"},
-    {600, "spotify.exe", 3.1f, 120.7f, "Running"}
-};
-
 void RenderProcessList(ImFont* font) {
     static int selected_row = -1;
+    static std::vector<ProcessInfo> processes;
+    static double last_update_time = -2.0;
+
+    double current_time = ImGui::GetTime();
+    if (current_time - last_update_time > 2.0) {
+        processes = FetchRealProcessData();
+        last_update_time = current_time;
+    }
 
     ImVec2 displaySize = ImGui::GetIO().DisplaySize;
     ImGui::SetNextWindowSize(ImVec2(displaySize.x, displaySize.y));
