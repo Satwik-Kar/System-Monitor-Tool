@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 void RenderProcessList(ImFont* font) {
     static int selected_row = -1;
@@ -16,7 +17,17 @@ void RenderProcessList(ImFont* font) {
     }
 
     ImVec2 displaySize = ImGui::GetIO().DisplaySize;
-    ImGui::SetNextWindowSize(ImVec2(displaySize.x, displaySize.y));
+
+    float headerHeight = std::clamp(displaySize.y * 0.06f, 40.0f, 80.0f);
+
+    float headerEndY = (displaySize.y / 2) + headerHeight;
+
+    float listStartY = headerEndY;
+    float listHeight = displaySize.y - listStartY;
+
+    ImGui::SetNextWindowPos(ImVec2(0.0f, listStartY));
+    ImGui::SetNextWindowSize(ImVec2(displaySize.x, listHeight));
+    
     ImGui::PushFont(font);
      
     if (ImGui::Begin("Process List", NULL,
