@@ -199,8 +199,8 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
     auto now = std::chrono::steady_clock::now();
 
     CpuPercentages cpuPercentages = getCpuUsagePercent();
-    static unsigned int workingCores = 0.0f;
-    static unsigned int totalCores = 0.0f;
+    static unsigned int workingCores = 0;
+    static unsigned int totalCores = 0;
     if (now - lastUpdateTime > updateInterval)
     {
 
@@ -283,8 +283,8 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
     if (elapsed >= UPDATE_INTERVAL)
     {
         elapsed = 0.0f;
-        userCPU[dataIndex] = 30.0f + static_cast<float>(rand() % 70);
-        systemCPU[dataIndex] = 20.0f + static_cast<float>(rand() % 50);
+        userCPU[dataIndex] = cpuPercentages.user;
+        systemCPU[dataIndex] = cpuPercentages.system;
         dataIndex = (dataIndex + 1) % IM_ARRAYSIZE(userCPU);
     }
 
@@ -298,18 +298,27 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
     graph->AddRect(graphPos, ImVec2(graphPos.x + graphSize.x, graphPos.y + graphSize.y), borderColor, cornerRadius, 0, 2.0f);
 
     graph->PushClipRect(graphPos, ImVec2(graphPos.x + graphSize.x, graphPos.y + graphSize.y), true);
+
+    // Add vertical padding to the graph lines
+    float y_padding = graphSize.y * 0.1f; // 10% padding top and bottom
+    float y_range = graphSize.y * 0.8f;   // Lines will be drawn in the middle 80%
+    float y_base = graphPos.y + y_padding;
+
     for (int i = 1; i < IM_ARRAYSIZE(userCPU); i++)
     {
         int i0 = (dataIndex + i - 1) % IM_ARRAYSIZE(userCPU);
         int i1 = (dataIndex + i) % IM_ARRAYSIZE(userCPU);
         float x0 = graphPos.x + ((i - 1) / 99.0f) * graphSize.x;
         float x1 = graphPos.x + (i / 99.0f) * graphSize.x;
-        float y0u = graphPos.y + graphSize.y * (1.0f - userCPU[i0] / 100.0f);
-        float y1u = graphPos.y + graphSize.y * (1.0f - userCPU[i1] / 100.0f);
-        float y0s = graphPos.y + graphSize.y * (1.0f - systemCPU[i0] / 100.0f);
-        float y1s = graphPos.y + graphSize.y * (1.0f - systemCPU[i1] / 100.0f);
-        graph->AddLine(ImVec2(x0, y0u), ImVec2(x1, y1u), IM_COL32(0, 200, 200, 255), std::max(1.0f, graphSize.y * 0.012f));
-        graph->AddLine(ImVec2(x0, y0s), ImVec2(x1, y1s), IM_COL32(120, 180, 255, 255), std::max(1.0f, graphSize.y * 0.012f));
+
+        // Apply padding and scaling to y-values
+        float y0u = y_base + y_range * (1.0f - std::clamp(userCPU[i0], 0.0f, 100.0f) / 100.0f);
+        float y1u = y_base + y_range * (1.0f - std::clamp(userCPU[i1], 0.0f, 100.0f) / 100.0f);
+        float y0s = y_base + y_range * (1.0f - std::clamp(systemCPU[i0], 0.0f, 100.0f) / 100.0f);
+        float y1s = y_base + y_range * (1.0f - std::clamp(systemCPU[i1], 0.0f, 100.0f) / 100.0f);
+
+        graph->AddLine(ImVec2(x0, y0u), ImVec2(x1, y1u), IM_COL32(0, 200, 200, 255), std::max(2.0f, graphSize.y * 0.022f));
+        graph->AddLine(ImVec2(x0, y0s), ImVec2(x1, y1s), IM_COL32(120, 180, 255, 255), std::max(2.0f, graphSize.y * 0.022f));
     }
     graph->PopClipRect();
 
@@ -330,7 +339,7 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
         {&userIcon, displayedCpuUserUsage, IM_COL32(23, 43, 58, 255), ImVec4(0.6, 0.9, 1, 1)},
         {&systemIcon, displayedCpuSystemUsage, IM_COL32(28, 55, 70, 255), ImVec4(0.4, 0.8, 1, 1)},
         {&idleIcon, displayedCpuIdleUsage, IM_COL32(40, 70, 90, 255), ImVec4(0.5, 0.8, 1, 1)},
-        {&cpuTexture, workingCores, IM_COL32(50, 90, 110, 255), ImVec4(0.7, 1, 0.9, 1)}};
+        {&cpuTexture, (float)workingCores, IM_COL32(50, 90, 110, 255), ImVec4(0.7, 1, 0.9, 1)}};
 
     float contentWidth = ImGui::GetContentRegionAvail().x;
     float xOffset = std::max(8.0f, contentWidth * 0.02f);
