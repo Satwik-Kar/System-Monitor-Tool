@@ -4,8 +4,8 @@
 #include "ui_header.hpp"
 #include "ui_cpu_window.hpp"
 #include "ui_memory_window.hpp"
-#include "ui_header_processes.hpp"
 #include "ui_process_list.hpp"
+
 int main() {
     sf::Texture logoTexture, chipIcon1, chipIcon2, refreshIcon, cpuTexture,
                 speedIcon, clockIcon, userIcon, systemIcon, idleIcon,
