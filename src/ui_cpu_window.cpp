@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 float getBaseCpuGhz()
 {
@@ -84,22 +85,95 @@ CpuStats getCpuStats()
 
     return {};
 }
+struct CpuPercentages
+{
+    float totalUsage = 0.0f;
+    float user = 0.0f;
+    float system = 0.0f;
+    float idle = 0.0f;
+};
 
-float getCpuUsagePercent()
+CpuPercentages getCpuUsagePercent()
 {
     static CpuStats prevStats = getCpuStats();
     CpuStats currentStats = getCpuStats();
     long long totalDelta = currentStats.Total() - prevStats.Total();
     long long activeDelta = currentStats.TotalActive() - prevStats.TotalActive();
-    float usage = 0.0f;
+
+    long long userDelta = (currentStats.user + currentStats.nice) - (prevStats.user + prevStats.nice);
+    long long systemDelta = (currentStats.system + currentStats.irq + currentStats.softirq) - (prevStats.system + prevStats.irq + prevStats.softirq);
+    long long idleDelta = currentStats.TotalIdle() - prevStats.TotalIdle();
+    float totalUsage = 0.0f;
+    float userPercentage = 0.0f;
+    float systemPercentage = 0.0f;
+    float idlePercentage = 0.0f;
+    CpuPercentages percentages;
     if (totalDelta > 0)
     {
-        usage = (float)activeDelta / (float)totalDelta * 100.0f;
+        percentages.totalUsage = (float)activeDelta / (float)totalDelta * 100.0f;
+    }
+    if (userDelta > 0)
+    {
+        percentages.user = static_cast<float>(userDelta) / totalDelta * 100.0f;
+    }
+    if (systemDelta > 0)
+    {
+        percentages.system = static_cast<float>(systemDelta) / totalDelta * 100.0f;
+    }
+    if (idleDelta > 0)
+    {
+        percentages.idle = static_cast<float>(idleDelta) / totalDelta * 100.0f;
     }
 
     prevStats = currentStats;
-    return usage;
+    return percentages;
 }
+
+unsigned int getWorkingCoreCount()
+{
+    return std::thread::hardware_concurrency();
+}
+
+unsigned int getTotalPossibleCores()
+{
+    std::ifstream possible_file("/sys/devices/system/cpu/possible");
+    if (!possible_file.is_open())
+    {
+        std::cerr << "Error: Could not open /sys/devices/system/cpu/possible" << std::endl;
+        return 0;
+    }
+
+    std::string line;
+    std::getline(possible_file, line);
+    possible_file.close();
+
+    size_t last_dash = line.rfind('-');
+    if (last_dash == std::string::npos)
+    {
+        try
+        {
+            int core_index = std::stoi(line);
+            return static_cast<unsigned int>(core_index + 1);
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error parsing core count from single value: " << e.what() << std::endl;
+            return 0;
+        }
+    }
+
+    try
+    {
+        int last_core_index = std::stoi(line.substr(last_dash + 1));
+        return static_cast<unsigned int>(last_core_index + 1);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error parsing core count from range: " << e.what() << std::endl;
+        return 0;
+    }
+}
+
 void RenderCPUWindow(sf::Texture &cpuTexture,
                      sf::Texture &speedIcon,
                      sf::Texture &clockIcon,
@@ -112,6 +186,11 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
 
     static float displayedCpuGhz = 0.0f;
     static float displayedCpuUsage = 0.0f;
+
+    static float displayedCpuUserUsage = 0.0f;
+    static float displayedCpuSystemUsage = 0.0f;
+    static float displayedCpuIdleUsage = 0.0f;
+
     static auto lastUpdateTime = std::chrono::steady_clock::now();
 
     float totalCpuGhz = getBaseCpuGhz();
@@ -119,11 +198,19 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
     const auto updateInterval = std::chrono::milliseconds(1000);
     auto now = std::chrono::steady_clock::now();
 
+    CpuPercentages cpuPercentages = getCpuUsagePercent();
+    static unsigned int workingCores = 0.0f;
+    static unsigned int totalCores = 0.0f;
     if (now - lastUpdateTime > updateInterval)
     {
 
         displayedCpuGhz = getCurrentCpuGhz();
-        displayedCpuUsage = getCpuUsagePercent();
+        displayedCpuUsage = cpuPercentages.totalUsage;
+        displayedCpuUserUsage = cpuPercentages.user;
+        displayedCpuSystemUsage = cpuPercentages.system;
+        displayedCpuIdleUsage = cpuPercentages.idle;
+        workingCores = getWorkingCoreCount();
+        totalCores = getTotalPossibleCores();
         lastUpdateTime = now;
     }
 
@@ -234,26 +321,48 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
     struct ChipInfo
     {
         sf::Texture *icon;
-        const char *label;
+        float label;
         ImU32 color;
         ImVec4 textColor;
     };
+
     std::vector<ChipInfo> list = {
-        {&userIcon, "User: 12%", IM_COL32(23, 43, 58, 255), ImVec4(0.6, 0.9, 1, 1)},
-        {&systemIcon, "System: 30%", IM_COL32(28, 55, 70, 255), ImVec4(0.4, 0.8, 1, 1)},
-        {&idleIcon, "Idle: 48%", IM_COL32(40, 70, 90, 255), ImVec4(0.5, 0.8, 1, 1)},
-        {&cpuTexture, "Available Cores: 16", IM_COL32(50, 90, 110, 255), ImVec4(0.7, 1, 0.9, 1)}};
+        {&userIcon, displayedCpuUserUsage, IM_COL32(23, 43, 58, 255), ImVec4(0.6, 0.9, 1, 1)},
+        {&systemIcon, displayedCpuSystemUsage, IM_COL32(28, 55, 70, 255), ImVec4(0.4, 0.8, 1, 1)},
+        {&idleIcon, displayedCpuIdleUsage, IM_COL32(40, 70, 90, 255), ImVec4(0.5, 0.8, 1, 1)},
+        {&cpuTexture, workingCores, IM_COL32(50, 90, 110, 255), ImVec4(0.7, 1, 0.9, 1)}};
 
     float contentWidth = ImGui::GetContentRegionAvail().x;
     float xOffset = std::max(8.0f, contentWidth * 0.02f);
     float chipSpacing = std::max(8.0f, contentWidth * 0.015f);
     float height = std::max(40.0f, contentWidth * 0.06f);
     float paddingX = std::clamp(contentWidth * 0.05f, 24.0f, 80.0f);
-    for (const auto &c : list)
+
+    const char *chipPrefixes[] = {
+        "User: ",
+        "System: ",
+        "Idle: ",
+        "Available Cores: "};
+
+    for (int i = 0; i < list.size(); ++i)
     {
-        float textWidth = ImGui::CalcTextSize(c.label).x;
+        const auto &c = list[i];
+        char formattedLabel[32];
+
+        if (i < 3)
+        {
+            snprintf(formattedLabel, sizeof(formattedLabel), "%s%.1f%%", chipPrefixes[i], c.label);
+        }
+        else
+        {
+            snprintf(formattedLabel, sizeof(formattedLabel), "%s%d", chipPrefixes[i], static_cast<int>(c.label));
+        }
+
+        float textWidth = ImGui::CalcTextSize(formattedLabel).x;
         float width = std::min(contentWidth * 0.9f, textWidth + paddingX + std::max(36.0f, contentWidth * 0.06f));
-        DrawChip(chips, chipBase, xOffset, 0, width, height, c.color, *c.icon, c.label, c.textColor);
+
+        DrawChip(chips, chipBase, xOffset, 0, width, height, c.color, *c.icon, formattedLabel, c.textColor);
+
         xOffset += width + chipSpacing;
         if (xOffset > contentWidth)
             break;
