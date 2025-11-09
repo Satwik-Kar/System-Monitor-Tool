@@ -9,6 +9,8 @@
 #include <thread>
 #include <fstream>
 #include <sstream>
+#include <signal.h> // Added for kill()
+#include <unistd.h> // Added for getpid()
 
 static char searchBuffer[128] = "";
 static int sortIndex = 0;
@@ -277,13 +279,16 @@ void RenderProcessList(ImFont* font) {
         ImGui::SetCursorPosX(20.0f);
         float tableWidth = displaySize.x - 40.0f;
 
-        if (ImGui::BeginTable("ProcessTable", 5, flags, ImVec2(tableWidth, -1.0f)))
+        // Changed column count from 5 to 6
+        if (ImGui::BeginTable("ProcessTable", 6, flags, ImVec2(tableWidth, -1.0f)))
         {
             ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed, 70.0f);
             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableSetupColumn("CPU (%)", ImGuiTableColumnFlags_WidthFixed, 80.0f);
             ImGui::TableSetupColumn("Memory (MB)", ImGuiTableColumnFlags_WidthFixed, 80.0f);
             ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+            // Added 6th column for the Kill button
+            ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 60.0f); 
 
             ImGui::TableHeadersRow();
 
@@ -293,11 +298,13 @@ void RenderProcessList(ImFont* font) {
 
                 if (i % 2 == 0)
                 {
-                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(IM_COL32(23, 43, 58, 255))); 
+                    // FIXED: Removed redundant ImGui::GetColorU32() wrapper
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(23, 43, 58, 255)); 
                 }
                 else
                 {
-                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(IM_COL32(14, 20, 24, 255))); 
+                    // FIXED: Removed redundant ImGui::GetColorU32() wrapper
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(14, 20, 24, 255)); 
                 }
 
                 ImGui::TableNextColumn();
@@ -320,6 +327,39 @@ void RenderProcessList(ImFont* font) {
 
                 ImGui::TableNextColumn();
                 ImGui::Text("%s", filtered_processes[i].status.c_str());
+
+                 
+                ImGui::TableNextColumn();
+                
+               ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(190, 50, 50, 255));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(210, 60, 60, 255));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(230, 70, 70, 255));
+                
+                int pid_to_kill = filtered_processes[i].pid;
+                char button_label[32];
+                sprintf(button_label, "Kill##%d", pid_to_kill);
+
+                
+                bool is_self = (pid_to_kill == getpid());
+                if (is_self) {
+                    
+                    ImGui::BeginDisabled();
+                }
+
+                 
+                if (ImGui::Button(button_label, ImVec2(-1, 0))) {
+                    if (!is_self) {
+                        kill(pid_to_kill, SIGKILL);  
+                    }
+                }
+
+                if (is_self) {
+                    
+                    ImGui::EndDisabled();
+                }
+
+                ImGui::PopStyleColor(3);  
+                  
             }
 
             ImGui::EndTable();
