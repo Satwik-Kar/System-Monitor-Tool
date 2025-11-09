@@ -31,7 +31,8 @@ Make sure you have the following installed:
 - `g++` (C++17 or later)
 - `make`
 - `SFML Dev`
-
+### 🔹 Build
+- use `make` cmd
 On Ubuntu:
 ```bash
 sudo apt update
