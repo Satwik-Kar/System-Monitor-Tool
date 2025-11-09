@@ -190,7 +190,6 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
     static float displayedCpuUserUsage = 0.0f;
     static float displayedCpuSystemUsage = 0.0f;
     static float displayedCpuIdleUsage = 0.0f;
-
     static auto lastUpdateTime = std::chrono::steady_clock::now();
 
     float totalCpuGhz = getBaseCpuGhz();
@@ -299,9 +298,8 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
 
     graph->PushClipRect(graphPos, ImVec2(graphPos.x + graphSize.x, graphPos.y + graphSize.y), true);
 
-    // Add vertical padding to the graph lines
-    float y_padding = graphSize.y * 0.1f; // 10% padding top and bottom
-    float y_range = graphSize.y * 0.8f;   // Lines will be drawn in the middle 80%
+    float y_padding = graphSize.y * 0.1f;
+    float y_range = graphSize.y * 0.8f;
     float y_base = graphPos.y + y_padding;
 
     for (int i = 1; i < IM_ARRAYSIZE(userCPU); i++)
@@ -310,8 +308,6 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
         int i1 = (dataIndex + i) % IM_ARRAYSIZE(userCPU);
         float x0 = graphPos.x + ((i - 1) / 99.0f) * graphSize.x;
         float x1 = graphPos.x + (i / 99.0f) * graphSize.x;
-
-        // Apply padding and scaling to y-values
         float y0u = y_base + y_range * (1.0f - std::clamp(userCPU[i0], 0.0f, 100.0f) / 100.0f);
         float y1u = y_base + y_range * (1.0f - std::clamp(userCPU[i1], 0.0f, 100.0f) / 100.0f);
         float y0s = y_base + y_range * (1.0f - std::clamp(systemCPU[i0], 0.0f, 100.0f) / 100.0f);
