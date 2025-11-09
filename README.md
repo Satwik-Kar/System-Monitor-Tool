@@ -30,7 +30,7 @@ Create a **System Monitor Tool** in **C++** that displays real-time information 
 Make sure you have the following installed:
 - `g++` (C++17 or later)
 - `make`
-- `SFML` and `ImGui-SFML` libraries
+- `SFML Dev`
 
 On Ubuntu:
 ```bash
