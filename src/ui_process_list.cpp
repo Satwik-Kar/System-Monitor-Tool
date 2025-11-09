@@ -5,6 +5,10 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include <map>
+#include <thread>
+#include <fstream>
+#include <sstream>
 
 static char searchBuffer[128] = "";
 static int sortIndex = 0;
@@ -12,6 +16,36 @@ static int statusIndex = 0;
 
 static const char* sortOptions[] = {"CPU %", "Memory %", "PID", "Name"};
 static const char* statusOptions[] = {"All", "Running", "Sleeping", "Stopped"};
+
+
+struct CpuStats
+{
+    long long user = 0, nice = 0, system = 0, idle = 0,
+              iowait = 0, irq = 0, softirq = 0, steal = 0;
+
+    long long TotalIdle() const { return idle + iowait; }
+    long long TotalActive() const { return user + nice + system + irq + softirq + steal; }
+    long long Total() const { return TotalIdle() + TotalActive(); }
+};
+
+static CpuStats getCpuStats()
+{
+    std::ifstream stat_file("/proc/stat");
+    std::string line;
+    std::getline(stat_file, line);
+    stat_file.close();
+
+    std::stringstream ss(line);
+    std::string cpu_label;
+    CpuStats stats;
+
+    if (ss >> cpu_label >> stats.user >> stats.nice >> stats.system >> stats.idle >> stats.iowait >> stats.irq >> stats.softirq >> stats.steal)
+    {
+        return stats;
+    }
+
+    return {};
+}
 
 
 void RenderProcessHeaderBar(sf::Texture& listIcon, sf::Texture& searchIcon,
@@ -130,11 +164,32 @@ void RenderProcessHeaderBar(sf::Texture& listIcon, sf::Texture& searchIcon,
 void RenderProcessList(ImFont* font) {
     static int selected_row = -1;
     static std::vector<ProcessInfo> all_processes;
+    static std::map<int, ProcessInfo> prev_process_map;
+    static CpuStats prev_cpu_stats = getCpuStats();
     static double last_update_time = -2.0;
 
     double current_time = ImGui::GetTime();
     if (current_time - last_update_time > 2.0) {
-        all_processes = FetchRealProcessData();
+        
+        CpuStats current_cpu_stats = getCpuStats();
+        long long total_jiffies_delta = current_cpu_stats.Total() - prev_cpu_stats.Total();
+        if (total_jiffies_delta == 0) total_jiffies_delta = 1;
+
+        std::vector<ProcessInfo> new_processes = FetchRealProcessData();
+        std::map<int, ProcessInfo> new_process_map;
+
+        for(auto& p : new_processes) {
+            auto it = prev_process_map.find(p.pid);
+            if (it != prev_process_map.end()) {
+                unsigned long long jiffies_delta = p.active_jiffies - it->second.active_jiffies;
+                p.cpu = (100.0f * (float)jiffies_delta) / (float)total_jiffies_delta;
+            }
+            new_process_map[p.pid] = p;
+        }
+        
+        all_processes = new_processes;
+        prev_process_map = new_process_map;
+        prev_cpu_stats = current_cpu_stats;
         last_update_time = current_time;
     }
 
@@ -232,7 +287,7 @@ void RenderProcessList(ImFont* font) {
 
             ImGui::TableHeadersRow();
 
-            for (int i = 0; i < filtered_processes.size(); i++)
+            for (size_t i = 0; i < filtered_processes.size(); i++)
             {
                 ImGui::TableNextRow();
 
@@ -249,10 +304,9 @@ void RenderProcessList(ImFont* font) {
                 char label[32];
                 sprintf(label, "%d", filtered_processes[i].pid);
                 ImGuiSelectableFlags selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
-                if (ImGui::Selectable(label, selected_row == i, selectable_flags))
+                if (ImGui::Selectable(label, selected_row == (int)i, selectable_flags))
                 {
                     selected_row = i;
-                    std::cout << "Selected Process: " << filtered_processes[i].name << std::endl;
                 }
 
                 ImGui::TableNextColumn();

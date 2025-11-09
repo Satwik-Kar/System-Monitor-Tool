@@ -9,6 +9,7 @@ struct ProcessInfo {
     float cpu;
     float memory;
     std::string status;
+    unsigned long long active_jiffies;
 };
 
 std::vector<ProcessInfo> FetchRealProcessData();

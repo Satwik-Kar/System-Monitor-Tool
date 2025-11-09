@@ -67,7 +67,7 @@ struct CpuStats
     long long Total() const { return TotalIdle() + TotalActive(); }
 };
 
-CpuStats getCpuStats()
+static CpuStats getCpuStats()
 {
     std::ifstream stat_file("/proc/stat");
     std::string line;
@@ -103,10 +103,7 @@ CpuPercentages getCpuUsagePercent()
     long long userDelta = (currentStats.user + currentStats.nice) - (prevStats.user + prevStats.nice);
     long long systemDelta = (currentStats.system + currentStats.irq + currentStats.softirq) - (prevStats.system + prevStats.irq + prevStats.softirq);
     long long idleDelta = currentStats.TotalIdle() - prevStats.TotalIdle();
-    float totalUsage = 0.0f;
-    float userPercentage = 0.0f;
-    float systemPercentage = 0.0f;
-    float idlePercentage = 0.0f;
+
     CpuPercentages percentages;
     if (totalDelta > 0)
     {
@@ -199,7 +196,7 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
 
     CpuPercentages cpuPercentages = getCpuUsagePercent();
     static unsigned int workingCores = 0;
-    static unsigned int totalCores = 0;
+    
     if (now - lastUpdateTime > updateInterval)
     {
 
@@ -209,7 +206,7 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
         displayedCpuSystemUsage = cpuPercentages.system;
         displayedCpuIdleUsage = cpuPercentages.idle;
         workingCores = getWorkingCoreCount();
-        totalCores = getTotalPossibleCores();
+        (void)getTotalPossibleCores();
         lastUpdateTime = now;
     }
 
@@ -258,7 +255,7 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
     ImDrawList *chipDrawList = ImGui::GetWindowDrawList();
     ImVec2 chipPos = ImGui::GetCursorScreenPos();
     float chipHeight = std::max(36.0f, winH * 0.09f);
-    float chipPaddingX = std::clamp(winW * 0.05f, 24.0f, 60.0f);
+    
     float chip1Width = std::clamp(winW * 0.32f, 120.0f, 260.0f);
     float chip2Width = std::clamp(winW * 0.28f, 100.0f, 220.0f);
     char cpuGhz[16];
@@ -349,7 +346,7 @@ void RenderCPUWindow(sf::Texture &cpuTexture,
         "Idle: ",
         "Available Cores: "};
 
-    for (int i = 0; i < list.size(); ++i)
+    for (size_t i = 0; i < list.size(); ++i)
     {
         const auto &c = list[i];
         char formattedLabel[32];
